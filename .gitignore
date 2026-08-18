@@ -1,0 +1,22 @@
+# Binaries & Test executables
+*.exe
+*.exe.test
+*.out
+*.test
+*.so
+*.a
+*.o
+
+# IDE / Editor files
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+
+# Go work
+go.work
+go.work.sum
+
+# Temporary build dir
+bin/
