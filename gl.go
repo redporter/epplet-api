@@ -1,16 +1,69 @@
 package epplet
 
 /*
-#define HAVE_GLX 1
 #include <X11/Xlib.h>
 #include <GL/glx.h>
+#include <dlfcn.h>
+#include <stdlib.h>
 
 #ifndef _EPPLET_H_GUARD
 #define _EPPLET_H_GUARD
 #include <epplet.h>
 #endif
 
-#include <stdlib.h>
+typedef GLXContext (*fn_bind_double_GL)(
+    Epplet_gadget da, int red, int blue, int green, int alpha,
+    int aux_buffers, int depth, int stencil, int accum_red,
+    int accum_green, int accum_blue, int accum_alpha);
+typedef GLXContext (*fn_bind_single_GL)(
+    Epplet_gadget da, int red, int blue, int green, int alpha,
+    int aux_buffers, int depth, int stencil, int accum_red,
+    int accum_green, int accum_blue, int accum_alpha);
+typedef GLXContext (*fn_default_bind_GL)(Epplet_gadget da);
+typedef void (*fn_unbind_GL)(GLXContext cx);
+
+static inline int has_glx_support(void) {
+    return dlsym(RTLD_DEFAULT, "Epplet_default_bind_GL") != NULL;
+}
+
+static inline GLXContext bridge_bind_double_GL(
+    Epplet_gadget da, int red, int blue, int green, int alpha,
+    int aux_buffers, int depth, int stencil, int accum_red,
+    int accum_green, int accum_blue, int accum_alpha)
+{
+    fn_bind_double_GL fn = (fn_bind_double_GL)dlsym(RTLD_DEFAULT, "Epplet_bind_double_GL");
+    if (fn) {
+        return fn(da, red, blue, green, alpha, aux_buffers, depth, stencil, accum_red, accum_green, accum_blue, accum_alpha);
+    }
+    return NULL;
+}
+
+static inline GLXContext bridge_bind_single_GL(
+    Epplet_gadget da, int red, int blue, int green, int alpha,
+    int aux_buffers, int depth, int stencil, int accum_red,
+    int accum_green, int accum_blue, int accum_alpha)
+{
+    fn_bind_single_GL fn = (fn_bind_single_GL)dlsym(RTLD_DEFAULT, "Epplet_bind_single_GL");
+    if (fn) {
+        return fn(da, red, blue, green, alpha, aux_buffers, depth, stencil, accum_red, accum_green, accum_blue, accum_alpha);
+    }
+    return NULL;
+}
+
+static inline GLXContext bridge_default_bind_GL(Epplet_gadget da) {
+    fn_default_bind_GL fn = (fn_default_bind_GL)dlsym(RTLD_DEFAULT, "Epplet_default_bind_GL");
+    if (fn) {
+        return fn(da);
+    }
+    return NULL;
+}
+
+static inline void bridge_unbind_GL(GLXContext cx) {
+    fn_unbind_GL fn = (fn_unbind_GL)dlsym(RTLD_DEFAULT, "Epplet_unbind_GL");
+    if (fn) {
+        fn(cx);
+    }
+}
 
 static inline void glx_swap_buffers(Window win) {
     Display *dpy = Epplet_get_display();
@@ -26,12 +79,17 @@ import "unsafe"
 // GLXContext represents an OpenGL GLX context handle.
 type GLXContext uintptr
 
+// HasGLXSupport checks whether the system libEpplet library was compiled with OpenGL/GLX support.
+func HasGLXSupport() bool {
+	return C.has_glx_support() != 0
+}
+
 // BindDoubleGL creates a double-buffered GLX context for this DrawingArea with specific bit-depth requirements.
 func (da *DrawingArea) BindDoubleGL(red, blue, green, alpha, auxBuffers, depth, stencil, accumRed, accumGreen, accumBlue, accumAlpha int) GLXContext {
 	if da == nil || da.handle == nil {
 		return 0
 	}
-	cx := C.Epplet_bind_double_GL(
+	cx := C.bridge_bind_double_GL(
 		da.handle,
 		C.int(red), C.int(blue), C.int(green), C.int(alpha),
 		C.int(auxBuffers), C.int(depth), C.int(stencil),
@@ -45,7 +103,7 @@ func (da *DrawingArea) BindSingleGL(red, blue, green, alpha, auxBuffers, depth, 
 	if da == nil || da.handle == nil {
 		return 0
 	}
-	cx := C.Epplet_bind_single_GL(
+	cx := C.bridge_bind_single_GL(
 		da.handle,
 		C.int(red), C.int(blue), C.int(green), C.int(alpha),
 		C.int(auxBuffers), C.int(depth), C.int(stencil),
@@ -59,7 +117,7 @@ func (da *DrawingArea) DefaultBindGL() GLXContext {
 	if da == nil || da.handle == nil {
 		return 0
 	}
-	cx := C.Epplet_default_bind_GL(da.handle)
+	cx := C.bridge_default_bind_GL(da.handle)
 	return GLXContext(uintptr(unsafe.Pointer(cx)))
 }
 
@@ -68,7 +126,7 @@ func (cx GLXContext) Unbind() {
 	if cx == 0 {
 		return
 	}
-	C.Epplet_unbind_GL(C.GLXContext(unsafe.Pointer(uintptr(cx))))
+	C.bridge_unbind_GL((C.GLXContext)(unsafe.Pointer(cx)))
 }
 
 // UnbindGL destroys (unbinds) a GLX context.
