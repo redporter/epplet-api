@@ -34,13 +34,26 @@ Building Go applications with `epplet-api` requires CGO and the following develo
 
 #### FreeBSD
 ```bash
-pkg install e16-epplet-base libX11 imlib2 mesa-libs
+pkg install epplets libX11 imlib2 mesa-libs
 ```
 
-#### Ubuntu / Debian
+#### Arch Linux
 ```bash
-sudo apt-get install e16 epplets libx11-dev libimlib2-dev libgl1-mesa-dev
+yay -S e16 e16-epplets imlib2
 ```
+
+#### Debian / Ubuntu
+> **Note**: While `e16` and `e16-epplets` were in older Debian releases, modern Debian/Ubuntu releases require building `libepplet` from source or PPA.
+
+1. Install build dependencies via `apt`:
+   ```bash
+   sudo apt-get install build-essential libx11-dev libimlib2-dev libgl1-mesa-dev
+   ```
+2. Build `e16` & `epplets` (`libepplet`) from official source tarballs or [Enlightenment GitHub](https://github.com/Enlightenment/e16):
+   ```bash
+   git clone https://github.com/Enlightenment/e16.git
+   cd e16/epplets && ./autogen.sh && make && sudo make install
+   ```
 
 ### Go Installation
 
