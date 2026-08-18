@@ -19,64 +19,81 @@ static inline void create_timer_bridge(void *handle, double time, char* name) {
         name
     );
 }
-
-
 */
 import "C"
 
-import "unsafe"
-import "runtime/cgo"
-import "time"
-import "sync"
+import (
+	"runtime/cgo"
+	"sync"
+	"time"
+	"unsafe"
+)
 
-func Init(name, version, info string, w, h int, vertical bool){
+// Init initializes the Epplet with Enlightenment 16 (e16).
+//
+// Parameters:
+//   - name: The application identifier string (e.g., "E-Clock").
+//   - version: Version string (e.g., "1.0").
+//   - info: Descriptive text about the epplet shown in About dialogs.
+//   - w, h: Width and height in 16-pixel tile grid units (e.g., 4, 4 -> 64x64 pixels).
+//   - vertical: Set to true for vertical layout orientation, false for horizontal.
+func Init(name, version, info string, w, h int, vertical bool) {
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
-	
+
 	cVersion := C.CString(version)
 	defer C.free(unsafe.Pointer(cVersion))
-	
+
 	cInfo := C.CString(info)
 	defer C.free(unsafe.Pointer(cInfo))
-	
+
 	cVert := 0
 	if vertical {
 		cVert = 1
 	}
 
-	//XXX pass argc and argv to e16 here	
 	C.Epplet_Init(cName, cVersion, cInfo, C.int(w), C.int(h), C.int(0), nil, C.char(cVert))
 }
 
-func Cleanup(){
+// Cleanup saves epplet configuration settings to disk, releases allocated X11 resources,
+// and performs orderly shutdown of the epplet library.
+func Cleanup() {
 	C.Epplet_cleanup()
 }
 
-func Show(){
+// Show maps and displays the primary Epplet window on the desktop.
+func Show() {
 	C.Epplet_show()
 }
 
-func Remember(){
+// Remember instructs Enlightenment 16 to remember the epplet's current screen position,
+// desktop layer, and sticky attributes.
+func Remember() {
 	C.Epplet_remember()
 }
 
-func Unremember(){
+// Unremember instructs Enlightenment 16 to forget any stored positioning or state attributes
+// for this epplet.
+func Unremember() {
 	C.Epplet_unremember()
 }
 
-func Loop(){
+// Loop enters the main Epplet event processing loop. This is a blocking call that
+// handles X11 events, timer ticks, IPC commands, and gadget interactions until the app exits.
+func Loop() {
 	C.Epplet_Loop()
 }
 
-
-
 // -----------------------------------------------------------------------------
-type Display struct{
+// Display & X11 Connection
+// -----------------------------------------------------------------------------
+
+// Display wraps the underlying X11 Display connection pointer.
+type Display struct {
 	ptr *C.Display
-	//here goes pointer to C display structure
-	//probably requires investigation which type it is
 }
 
+// GetDisplay returns a pointer to the X11 Display connection used by the Epplet library.
 func GetDisplay() *Display {
 	cDisp := C.Epplet_get_display()
 	if cDisp == nil {
@@ -85,17 +102,19 @@ func GetDisplay() *Display {
 	return &Display{ptr: cDisp}
 }
 
+// -----------------------------------------------------------------------------
+// IPC Communications
+// -----------------------------------------------------------------------------
 
-
-// ----------------------- IPC -------------------------------------------------
-func SendIPC(msg string){
+// SendIPC sends an Enlightenment IPC message string to the e16 window manager.
+func SendIPC(msg string) {
 	cStr := C.CString(msg)
 	defer C.free(unsafe.Pointer(cStr))
 	C.Epplet_send_ipc(cStr)
 }
 
-// BlockForIPC blocks until an IPC message is received and returns the message string.
-// If the call fails or returns NULL, an empty string is returned.
+// BlockForIPC blocks until an IPC message is received and returns the message text string.
+// Returns an empty string if the call fails.
 func BlockForIPC() string {
 	cMsg := C.Epplet_wait_for_ipc()
 	if cMsg == nil {
@@ -104,92 +123,72 @@ func BlockForIPC() string {
 	return C.GoString(cMsg)
 }
 
-// WaitForIPCAsync waits for the next IPC message in a background goroutine 
-// and delivers the result over a Go string channel.
+// WaitForIPCAsync returns a read-only Go channel that receives IPC messages asynchronously.
 func WaitForIPCAsync() <-chan string {
-	ch := make(chan string, 1)
+	ch := make(chan string, 10)
 	go func() {
-		cMsg := C.Epplet_wait_for_ipc()
-		if cMsg != nil {
-			ch <- C.GoString(cMsg)
-		} else {
-			close(ch)
+		for {
+			msg := BlockForIPC()
+			if msg != "" {
+				ch <- msg
+			}
 		}
 	}()
 	return ch
 }
 
-
-
-
+// -----------------------------------------------------------------------------
+// Imageclass & Textclass Helpers
 // -----------------------------------------------------------------------------
 
-type Pixmap uintptr
-
+// ImageclassPixmaps represents pixmap handles for an imageclass state.
 type ImageclassPixmaps struct {
-	Pixmap Pixmap
-	Mask   Pixmap
+	Pixmap C.Pixmap
+	Mask   C.Pixmap
 }
 
+// ImageclassGetPixmaps calculates and returns the Pixmap and Mask handles for a given imageclass and state.
+func ImageclassGetPixmaps(iclass, state string, width, height int) ImageclassPixmaps {
+	cIclass := C.CString(iclass)
+	defer C.free(unsafe.Pointer(cIclass))
+
+	cState := C.CString(state)
+	defer C.free(unsafe.Pointer(cState))
+
+	var p, m C.Pixmap
+	C.Epplet_imageclass_get_pixmaps(cIclass, cState, &p, &m, C.int(width), C.int(height))
+	return ImageclassPixmaps{Pixmap: p, Mask: m}
+}
+
+// Size represents width and height dimensions in pixels.
 type Size struct {
 	Width  int
 	Height int
 }
 
-func ImageclassGetPixmaps(iclass string, state string, w, h int) ImageclassPixmaps {
-	cIclass := C.CString(iclass)
-	defer C.free(unsafe.Pointer(cIclass))
-	cState := C.CString(state)
-	defer C.free(unsafe.Pointer(cState))
-
-	var cPmap C.Pixmap
-	var cMask C.Pixmap
-
-	C.Epplet_imageclass_get_pixmaps(
-		cIclass,
-		cState,
-		&cPmap,
-		&cMask,
-		C.int(w),
-		C.int(h),
-	)
-
-	return ImageclassPixmaps{
-		Pixmap: Pixmap(cPmap),
-		Mask:   Pixmap(cMask),
-	}
-}
-
-func TextclassGetSize(tclass string, x, h int, txt string) Size{
+// TextclassGetSize calculates and returns the rendered pixel width and height for text formatted with a textclass.
+func TextclassGetSize(tclass, state, text string) Size {
 	cTclass := C.CString(tclass)
 	defer C.free(unsafe.Pointer(cTclass))
-	cTxt := C.CString(txt)
-	defer C.free(unsafe.Pointer(cTxt))
-	
-	var cW C.int
-	var cH C.int	
 
-	C.Epplet_textclass_get_size(
-		cTclass,
-		&cW,
-		&cH,
-		cTxt,
-	)
-	
-	return Size{
-		Height: int(cH),
-		Width: int(cW),
-	}
+	cText := C.CString(text)
+	defer C.free(unsafe.Pointer(cText))
+
+	var w, h C.int
+	C.Epplet_textclass_get_size(cTclass, &w, &h, cText)
+	return Size{Width: int(w), Height: int(h)}
 }
 
-
+// -----------------------------------------------------------------------------
+// Timers
 // -----------------------------------------------------------------------------
 
+// TimerCallback represents a function signature invoked by Epplet timers.
 type TimerCallback func()
 
 var (
-	timerMu     sync.Mutex
 	timerHandles = make(map[string]cgo.Handle)
+	timerMu      sync.Mutex
 )
 
 //export goTimerGateway
@@ -216,12 +215,13 @@ func goTimerGateway(data unsafe.Pointer) {
 	timerMu.Unlock()
 }
 
-func Timer(cb TimerCallback, d time.Duration, name string){
-    cName := C.CString(name)
+// Timer registers a one-shot timer callback that fires after duration d.
+// To create a recurring timer, invoke Timer again inside the callback function.
+func Timer(cb TimerCallback, d time.Duration, name string) {
+	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
 
 	timerMu.Lock()
-	// If a timer with this name already exists, delete its old handle
 	if oldHandle, exists := timerHandles[name]; exists {
 		oldHandle.Delete()
 	}
@@ -234,9 +234,9 @@ func Timer(cb TimerCallback, d time.Duration, name string){
 	C.create_timer_bridge(unsafe.Pointer(handle), C.double(seconds), cName)
 }
 
-
-func RemoveTimer(name string){
-    cName := C.CString(name)
+// RemoveTimer cancels and removes an active timer by name.
+func RemoveTimer(name string) {
+	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
 
 	timerMu.Lock()
@@ -249,6 +249,7 @@ func RemoveTimer(name string){
 	C.Epplet_remove_timer(cName)
 }
 
+// TimerGetData retrieves the active TimerCallback function for a named timer, or nil if missing.
 func TimerGetData(name string) TimerCallback {
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
@@ -264,4 +265,3 @@ func TimerGetData(name string) TimerCallback {
 	}
 	return nil
 }
-
