@@ -18,7 +18,7 @@ This document provides a comprehensive inventory of all data structures, functio
 | **Gadget Operations & Constructors** | 35 | 33 | 94% |
 | **2D Drawing & RGB Buffers** | 11 | 11 | 100% |
 | **OpenGL / GLX Contexts** | 4 | 4 | 100% |
-| **Command Execution & Dialogs** | 10 | 0 | 0% |
+| **Command Execution & Dialogs** | 10 | 10 | 100% |
 | **Config File System** | 13 | 0 | 0% |
 
 ---
@@ -112,14 +112,31 @@ This document provides a comprehensive inventory of all data structures, functio
 
 | C Function in `epplet.h` | Go Function / Method | Status | Notes / Location |
 | :--- | :--- | :---: | :--- |
-| `Epplet_bind_double_GL` | `DrawingArea.BindDoubleGL(...) GLXContext` | **Bridged** | [gl.go:L22](file:///home/nemanja/projects/123-Go/dev/epplet-api/gl.go#L22) |
-| `Epplet_bind_single_GL` | `DrawingArea.BindSingleGL(...) GLXContext` | **Bridged** | [gl.go:L35](file:///home/nemanja/projects/123-Go/dev/epplet-api/gl.go#L35) |
-| `Epplet_default_bind_GL` | `DrawingArea.DefaultBindGL() GLXContext` | **Bridged** | [gl.go:L48](file:///home/nemanja/projects/123-Go/dev/epplet-api/gl.go#L48) |
-| `Epplet_unbind_GL` | `GLXContext.Unbind()` / `UnbindGL(...)` | **Bridged** | [gl.go:L57](file:///home/nemanja/projects/123-Go/dev/epplet-api/gl.go#L57) |
+| `Epplet_bind_double_GL` | `DrawingArea.BindDoubleGL(...) GLXContext` | **Bridged** | [gl.go:L78](file:///home/nemanja/projects/123-Go/dev/epplet-api/gl.go#L78) |
+| `Epplet_bind_single_GL` | `DrawingArea.BindSingleGL(...) GLXContext` | **Bridged** | [gl.go:L91](file:///home/nemanja/projects/123-Go/dev/epplet-api/gl.go#L91) |
+| `Epplet_default_bind_GL` | `DrawingArea.DefaultBindGL() GLXContext` | **Bridged** | [gl.go:L104](file:///home/nemanja/projects/123-Go/dev/epplet-api/gl.go#L104) |
+| `Epplet_unbind_GL` | `GLXContext.Unbind()` / `UnbindGL(...)` | **Bridged** | [gl.go:L113](file:///home/nemanja/projects/123-Go/dev/epplet-api/gl.go#L113) |
 
 ---
 
-### 8. Event & Callback Handlers
+### 8. Command Execution & Dialog Helpers
+
+| C Function in `epplet.h` | Go Function / Method | Status | Notes / Location |
+| :--- | :--- | :---: | :--- |
+| `Epplet_run_command` | `RunCommand(cmd string) int` | **Bridged** | [process.go:L34](file:///home/nemanja/projects/123-Go/dev/epplet-api/process.go#L34) |
+| `Epplet_read_run_command` | `ReadRunCommand(cmd string) string` | **Bridged** | [process.go:L41](file:///home/nemanja/projects/123-Go/dev/epplet-api/process.go#L41) |
+| `Epplet_spawn_command` | `SpawnCommand(cmd string) int` | **Bridged** | [process.go:L51](file:///home/nemanja/projects/123-Go/dev/epplet-api/process.go#L51) |
+| `Epplet_pause_spawned_command` | `PauseSpawnedCommand(pid int)` | **Bridged** | [process.go:L58](file:///home/nemanja/projects/123-Go/dev/epplet-api/process.go#L58) |
+| `Epplet_unpause_spawned_command` | `UnpauseSpawnedCommand(pid int)` | **Bridged** | [process.go:L63](file:///home/nemanja/projects/123-Go/dev/epplet-api/process.go#L63) |
+| `Epplet_kill_spawned_command` | `KillSpawnedCommand(pid int)` | **Bridged** | [process.go:L68](file:///home/nemanja/projects/123-Go/dev/epplet-api/process.go#L68) |
+| `Epplet_destroy_spawned_command` | `DestroySpawnedCommand(pid int)` | **Bridged** | [process.go:L73](file:///home/nemanja/projects/123-Go/dev/epplet-api/process.go#L73) |
+| `Epplet_register_child_handler` | `RegisterChildHandler(handler ChildHandler)` | **Bridged** | [process.go:L91](file:///home/nemanja/projects/123-Go/dev/epplet-api/process.go#L91) |
+| `Epplet_show_about` | `ShowAbout(name string)` | **Bridged** | [process.go:L104](file:///home/nemanja/projects/123-Go/dev/epplet-api/process.go#L104) |
+| `Epplet_dialog_ok` | `DialogOk(text string)` | **Bridged** | [process.go:L111](file:///home/nemanja/projects/123-Go/dev/epplet-api/process.go#L111) |
+
+---
+
+### 9. Event & Callback Handlers
 
 | C Function in `epplet.h` | Go Function / Type | Status | Notes / Location |
 | :--- | :--- | :---: | :--- |
@@ -139,7 +156,7 @@ This document provides a comprehensive inventory of all data structures, functio
 
 ---
 
-### 9. Timers
+### 10. Timers
 
 | C Function in `epplet.h` | Go Function / Method | Status | Notes / Location |
 | :--- | :--- | :---: | :--- |
@@ -150,7 +167,7 @@ This document provides a comprehensive inventory of all data structures, functio
 
 ---
 
-### 10. Gadgets & Widgets
+### 11. Gadgets & Widgets
 
 #### Base Gadget Attributes & Controls
 | C Function in `epplet.h` | Go Function / Method | Status | Notes / Location |
@@ -235,25 +252,13 @@ This document provides a comprehensive inventory of all data structures, functio
 
 ---
 
-### 11. Unbridged Features (C API Only)
+### 12. Unbridged Features (C API Only)
 
 The following functions in `epplet.h` do not currently have direct Go wrappers in `epplet-api`:
 
 #### Callback Data Pointers (N/A in Go)
 - `Epplet_gadget_get_data` (Callbacks managed in Go using `cgo.Handle`)
 - `Epplet_popup_entry_get_data` (Callbacks managed in Go using `cgo.Handle`)
-
-#### Process Spawning & Dialog Helpers
-- `Epplet_run_command`
-- `Epplet_read_run_command`
-- `Epplet_spawn_command`
-- `Epplet_pause_spawned_command`
-- `Epplet_unpause_spawned_command`
-- `Epplet_kill_spawned_command`
-- `Epplet_destroy_spawned_command`
-- `Epplet_register_child_handler`
-- `Epplet_show_about`
-- `Epplet_dialog_ok`
 
 #### Config Subsystem
 - `Epplet_load_config`
