@@ -11,6 +11,13 @@ package epplet
 #endif
 
 #include <stdlib.h>
+
+static inline void glx_swap_buffers(Window win) {
+    Display *dpy = Epplet_get_display();
+    if (dpy && win) {
+        glXSwapBuffers(dpy, (GLXDrawable)win);
+    }
+}
 */
 import "C"
 
@@ -67,4 +74,21 @@ func (cx GLXContext) Unbind() {
 // UnbindGL destroys (unbinds) a GLX context.
 func UnbindGL(cx GLXContext) {
 	cx.Unbind()
+}
+
+// SwapBuffers swaps the front and back GL buffers for this DrawingArea's window.
+func (da *DrawingArea) SwapBuffers() {
+	if da == nil || da.handle == nil {
+		return
+	}
+	win := da.DrawingAreaWindow()
+	if win == 0 {
+		return
+	}
+	C.glx_swap_buffers(C.Window(win))
+}
+
+// SwapBuffers swaps the front and back GL buffers for the given window.
+func (win Window) SwapBuffers() {
+	C.glx_swap_buffers(C.Window(win))
 }
