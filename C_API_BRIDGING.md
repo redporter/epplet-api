@@ -19,7 +19,7 @@ This document provides a comprehensive inventory of all data structures, functio
 | **2D Drawing & RGB Buffers** | 11 | 11 | 100% |
 | **OpenGL / GLX Contexts** | 4 | 4 | 100% |
 | **Command Execution & Dialogs** | 10 | 10 | 100% |
-| **Config File System** | 13 | 0 | 0% |
+| **Config File System** | 13 | 13 | 100% |
 
 ---
 
@@ -112,10 +112,10 @@ This document provides a comprehensive inventory of all data structures, functio
 
 | C Function in `epplet.h` | Go Function / Method | Status | Notes / Location |
 | :--- | :--- | :---: | :--- |
-| `Epplet_bind_double_GL` | `DrawingArea.BindDoubleGL(...) GLXContext` | **Bridged** | [gl.go:L78](file:///home/nemanja/projects/123-Go/dev/epplet-api/gl.go#L78) |
-| `Epplet_bind_single_GL` | `DrawingArea.BindSingleGL(...) GLXContext` | **Bridged** | [gl.go:L91](file:///home/nemanja/projects/123-Go/dev/epplet-api/gl.go#L91) |
-| `Epplet_default_bind_GL` | `DrawingArea.DefaultBindGL() GLXContext` | **Bridged** | [gl.go:L104](file:///home/nemanja/projects/123-Go/dev/epplet-api/gl.go#L104) |
-| `Epplet_unbind_GL` | `GLXContext.Unbind()` / `UnbindGL(...)` | **Bridged** | [gl.go:L113](file:///home/nemanja/projects/123-Go/dev/epplet-api/gl.go#L113) |
+| `Epplet_bind_double_GL` | `DrawingArea.BindDoubleGL(...) GLXContext` | **Bridged** | [gl.go:L97](file:///home/nemanja/projects/123-Go/dev/epplet-api/gl.go#L97) |
+| `Epplet_bind_single_GL` | `DrawingArea.BindSingleGL(...) GLXContext` | **Bridged** | [gl.go:L110](file:///home/nemanja/projects/123-Go/dev/epplet-api/gl.go#L110) |
+| `Epplet_default_bind_GL` | `DrawingArea.DefaultBindGL() GLXContext` | **Bridged** | [gl.go:L123](file:///home/nemanja/projects/123-Go/dev/epplet-api/gl.go#L123) |
+| `Epplet_unbind_GL` | `GLXContext.Unbind()` / `UnbindGL(...)` | **Bridged** | [gl.go:L154](file:///home/nemanja/projects/123-Go/dev/epplet-api/gl.go#L154) |
 
 ---
 
@@ -136,7 +136,27 @@ This document provides a comprehensive inventory of all data structures, functio
 
 ---
 
-### 9. Event & Callback Handlers
+### 9. Config Subsystem
+
+| C Function in `epplet.h` | Go Function / Method | Status | Notes / Location |
+| :--- | :--- | :---: | :--- |
+| `Epplet_load_config` | `LoadConfig()` | **Bridged** | [config.go:L25](file:///home/nemanja/projects/123-Go/dev/epplet-api/config.go#L25) |
+| `Epplet_load_config_file` | `LoadConfigFile(filename string)` | **Bridged** | [config.go:L30](file:///home/nemanja/projects/123-Go/dev/epplet-api/config.go#L30) |
+| `Epplet_get_instance` | `GetInstance() int` | **Bridged** | [config.go:L37](file:///home/nemanja/projects/123-Go/dev/epplet-api/config.go#L37) |
+| `Epplet_query_config` | `QueryConfig(key string) string` | **Bridged** | [config.go:L42](file:///home/nemanja/projects/123-Go/dev/epplet-api/config.go#L42) |
+| `Epplet_query_config_def` | `QueryConfigDef(key, defaultVal string) string` | **Bridged** | [config.go:L53](file:///home/nemanja/projects/123-Go/dev/epplet-api/config.go#L53) |
+| `Epplet_modify_config` | `ModifyConfig(key, value string)` | **Bridged** | [config.go:L66](file:///home/nemanja/projects/123-Go/dev/epplet-api/config.go#L66) |
+| `Epplet_add_config` | `AddConfig(key, value string)` | **Bridged** | [config.go:L75](file:///home/nemanja/projects/123-Go/dev/epplet-api/config.go#L75) |
+| `Epplet_modify_multi_config` | `ModifyMultiConfig(key string, values []string)` | **Bridged** | [config.go:L84](file:///home/nemanja/projects/123-Go/dev/epplet-api/config.go#L84) |
+| `Epplet_query_multi_config` | `QueryMultiConfig(key string) []string` | **Bridged** | [config.go:L106](file:///home/nemanja/projects/123-Go/dev/epplet-api/config.go#L106) |
+| `Epplet_save_config` | `SaveConfig()` | **Bridged** | [config.go:L131](file:///home/nemanja/projects/123-Go/dev/epplet-api/config.go#L131) |
+| `Epplet_clear_config` | `ClearConfig()` | **Bridged** | [config.go:L136](file:///home/nemanja/projects/123-Go/dev/epplet-api/config.go#L136) |
+| `Epplet_data_dir` | `DataDir() string` | **Bridged** | [config.go:L141](file:///home/nemanja/projects/123-Go/dev/epplet-api/config.go#L141) |
+| `Epplet_e16_user_dir` | `E16UserDir() string` | **Bridged** | [config.go:L150](file:///home/nemanja/projects/123-Go/dev/epplet-api/config.go#L150) |
+
+---
+
+### 10. Event & Callback Handlers
 
 | C Function in `epplet.h` | Go Function / Type | Status | Notes / Location |
 | :--- | :--- | :---: | :--- |
@@ -156,7 +176,7 @@ This document provides a comprehensive inventory of all data structures, functio
 
 ---
 
-### 10. Timers
+### 11. Timers
 
 | C Function in `epplet.h` | Go Function / Method | Status | Notes / Location |
 | :--- | :--- | :---: | :--- |
@@ -167,7 +187,7 @@ This document provides a comprehensive inventory of all data structures, functio
 
 ---
 
-### 11. Gadgets & Widgets
+### 12. Gadgets & Widgets
 
 #### Base Gadget Attributes & Controls
 | C Function in `epplet.h` | Go Function / Method | Status | Notes / Location |
@@ -252,25 +272,10 @@ This document provides a comprehensive inventory of all data structures, functio
 
 ---
 
-### 12. Unbridged Features (C API Only)
+### 13. Unbridged Features (C API Only)
 
 The following functions in `epplet.h` do not currently have direct Go wrappers in `epplet-api`:
 
 #### Callback Data Pointers (N/A in Go)
 - `Epplet_gadget_get_data` (Callbacks managed in Go using `cgo.Handle`)
 - `Epplet_popup_entry_get_data` (Callbacks managed in Go using `cgo.Handle`)
-
-#### Config Subsystem
-- `Epplet_load_config`
-- `Epplet_load_config_file`
-- `Epplet_get_instance`
-- `Epplet_query_config`
-- `Epplet_query_config_def`
-- `Epplet_modify_config`
-- `Epplet_add_config`
-- `Epplet_modify_multi_config`
-- `Epplet_query_multi_config`
-- `Epplet_save_config`
-- `Epplet_clear_config`
-- `Epplet_data_dir`
-- `Epplet_e16_user_dir`
